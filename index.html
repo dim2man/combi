@@ -1,10 +1,53 @@
 <!doctype html>
 <html>
 <head>
-<title>Combi</title>
+<title>combi</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {margin: 0; padding: 0; box-sizing: border-box;}
+form {display: flex; flex-flow: row nowrap; margin-bottom: 10px;}
+form > * {padding: 5px;}
+input:nth-child(1) {flex: auto; margin-right: 10px; width: 1px;}
+input:nth-child(2) {flex: none; margin-right: 10px; width: 100px;}
+button {flex: none; width: 80px;}
+pre {text-align: center; line-height: 1.4; font-size: 2em; letter-spacing: 2px; font-family: Helvetica, Arial, sans-serif;}
+</style>
 </head>
 <body>
-<form><input type=text value=''><input type=number value=''><button>Shuffle</button></form>
+<form>
+	<input type="text" value="" placeholder="characters">
+	<input type="number" value="" placeholder="length">
+	<button>shuffle</button>
+</form>
 <pre></pre>
+<script>
+function* roll(array, start) {
+	for(let i=start; i<array.length; i++) {
+		let next = [...array.slice(0,start),array[i],...array.slice(start,i),...array.slice(i+1)];
+		if(start >= array.length - 2) {
+			yield next;
+		} else {      
+			yield* roll(next, start+1);
+		}
+	}
+}
+
+const charsEl = document.querySelector('input:nth-child(1)');
+const lenEl = document.querySelector('input:nth-child(2)');
+const preEl = document.querySelector('pre');
+document.querySelector('form').addEventListener('submit', e => {
+	e.preventDefault();
+	preEl.innerText = '';
+	let chars = String(charsEl.value).split('');
+	let len = Math.min(Math.max(parseInt(lenEl.value,10) || 0, 0), chars.length) || undefined;
+	let words = new Set();
+	for(let next of roll(chars, 0)) {
+		const word = next.slice(0,len).join('');
+		words.add(word);
+	}
+	preEl.innerText = `total: ${words.size}\n${Array.from(words).sort().join('\n')}`;
+});
+</script>
 </body>
 </html>
