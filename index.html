@@ -12,6 +12,8 @@ input:nth-child(1) {flex: auto; margin-right: 10px; width: 1px;}
 input:nth-child(2) {flex: none; margin-right: 10px; width: 100px;}
 button {flex: none; width: 80px;}
 pre {text-align: center; line-height: 1.4; font-size: 2em; letter-spacing: 2px; font-family: Helvetica, Arial, sans-serif;}
+.next {padding: 5px; width: 80px; margin: 10px auto 0; display: none;}
+.visible {display: block;}
 </style>
 </head>
 <body>
@@ -21,6 +23,7 @@ pre {text-align: center; line-height: 1.4; font-size: 2em; letter-spacing: 2px; 
 	<button>shuffle</button>
 </form>
 <pre></pre>
+<button class="next">next</button>
 <script>
 function* roll(array, start) {
 	for(let i=start; i<array.length; i++) {
@@ -33,21 +36,46 @@ function* roll(array, start) {
 	}
 }
 
+const params = new URLSearchParams(location.search);
+const max = params.has('max') ? Math.max(+params.get('max'), 1) : 1000;
 const charsEl = document.querySelector('input:nth-child(1)');
 const lenEl = document.querySelector('input:nth-child(2)');
 const preEl = document.querySelector('pre');
+const nextEl = document.querySelector('.next');
+let allWords;
+let iter;
+let len;
+function shuffle() {
+	preEl.innerText = '';
+	let words = new Set();
+	while(iter) {
+		let next = iter.next();
+		if (next.done) break;
+		const word = next.value.slice(0,len).join('');
+		if (!allWords.has(word)) {
+			words.add(word);
+			allWords.add(word);
+			if(words.size >= max) break;
+		}
+	}
+	if(words.size >= max) {
+		nextEl.classList.add('visible');
+	} else {
+		nextEl.classList.remove('visible');
+	}
+	preEl.innerText = `total: ${allWords.size + (words.size >= max ? '+':'')}\n${Array.from(words).sort().join('\n')}`;
+	window.scrollTo(0,0);
+}
+
 document.querySelector('form').addEventListener('submit', e => {
 	e.preventDefault();
-	preEl.innerText = '';
-	let chars = String(charsEl.value).split('');
-	let len = Math.min(Math.max(parseInt(lenEl.value,10) || 0, 0), chars.length) || undefined;
-	let words = new Set();
-	for(let next of roll(chars, 0)) {
-		const word = next.slice(0,len).join('');
-		words.add(word);
-	}
-	preEl.innerText = `total: ${words.size}\n${Array.from(words).sort().join('\n')}`;
+	let chars = String(charsEl.value).split('').sort();
+	len = Math.min(Math.max(parseInt(lenEl.value,10) || 0, 0), chars.length) || undefined;
+	iter = roll(chars, 0);
+	allWords = new Set();
+	shuffle();
 });
+document.querySelector('.next').addEventListener('click', shuffle);
 </script>
 </body>
 </html>
