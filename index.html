@@ -25,13 +25,13 @@ pre {text-align: center; line-height: 1.4; font-size: 2em; letter-spacing: 2px; 
 <pre></pre>
 <button class="next">next</button>
 <script>
-function* roll(array, start) {
+function* roll(array, start, len=array.length) {
 	for(let i=start; i<array.length; i++) {
 		let next = [...array.slice(0,start),array[i],...array.slice(start,i),...array.slice(i+1)];
-		if(start >= array.length - 2) {
+		if(start >= len - 1) {
 			yield next;
 		} else {      
-			yield* roll(next, start+1);
+			yield* roll(next, start+1, len);
 		}
 	}
 }
@@ -63,15 +63,15 @@ function shuffle() {
 	} else {
 		nextEl.classList.remove('visible');
 	}
-	preEl.innerText = `total: ${allWords.size + (words.size >= max ? '+':'')}\n${Array.from(words).sort().join('\n')}`;
+	preEl.innerText = `total: ${allWords.size + (words.size >= max ? '+':'')}\n${Array.from(words).join('\n')}`;
 	window.scrollTo(0,0);
 }
 
 document.querySelector('form').addEventListener('submit', e => {
 	e.preventDefault();
-	let chars = String(charsEl.value).split('').sort();
+	let chars = String(charsEl.value).split('');
 	len = Math.min(Math.max(parseInt(lenEl.value,10) || 0, 0), chars.length) || undefined;
-	iter = roll(chars, 0);
+	iter = roll(chars, 0, len);
 	allWords = new Set();
 	shuffle();
 });
