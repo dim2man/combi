@@ -38,6 +38,7 @@ function* roll(array, start, len=array.length) {
 
 const params = new URLSearchParams(location.search);
 const max = params.has('max') ? Math.max(+params.get('max'), 1) : 1000;
+const onlywords = params.has('words');
 const charsEl = document.querySelector('input:nth-child(1)');
 const lenEl = document.querySelector('input:nth-child(2)');
 const preEl = document.querySelector('pre');
@@ -45,6 +46,7 @@ const nextEl = document.querySelector('.next');
 let allWords;
 let iter;
 let len;
+let voc;
 function shuffle() {
 	preEl.innerText = '';
 	let words = new Set();
@@ -63,8 +65,21 @@ function shuffle() {
 	} else {
 		nextEl.classList.remove('visible');
 	}
-	preEl.innerText = `total: ${allWords.size + (words.size >= max ? '+':'')}\n${Array.from(words).join('\n')}`;
+	preEl.innerText = `total: ${allWords.size + (words.size >= max ? '+':'')}\n${Array.from(words)
+		.filter(word => {
+			return onlywords ? Boolean(word.split('').reduce((acc, l) => acc[l] || {}, voc)._) : true
+		})
+		.join('\n')}`;
 	window.scrollTo(0,0);
+}
+
+if(onlywords) {
+	const button = document.querySelector('button');
+	button.disabled = true;
+	fetch('voc.json').then(r=>r.json()).then(res=>{
+		button.disabled = false;
+		voc = res;
+	});
 }
 
 document.querySelector('form').addEventListener('submit', e => {
